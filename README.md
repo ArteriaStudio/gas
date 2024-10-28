@@ -1,0 +1,1 @@
+Google Workspaceのライセンス操作を自動化するツールです。
