@@ -34,3 +34,18 @@ function getLicenseAssignment(productId, skuId, userId) {
   }
   return(true)
 }
+
+//　組織単位を変更する。
+function moveOrgUnit(primaryEmail, newOrgUnit)
+{
+  try {
+    //　リクエスト本文を作成
+    var pUser = {
+      orgUnitPath: newOrgUnit
+    }
+    var pResult = AdminDirectory.Users.update(pUser, primaryEmail)
+    console.log("email:" + pResult.primaryEmail + ", id: " + pResult.id)
+  } catch(e) {
+    console.log('Failed with an error %s ', e.message);
+  }
+}
