@@ -15,12 +15,6 @@ var g_skuId = ""
 //　定期処理
 function main()
 {
-  //　停止中のアカウントからライセンスを剥奪する。
-  //revokeLicenseFromSuspendedUsers(g_pDomainName, g_productId, g_skuId)
-
-  //　アカウントの組織単位を変更する。
-  //moveOrgUnit("element@arteria-s.net", "/客員")
-
   //　定期処理を実行
   loadEntities("1IY1-ZE8AtnxOF_CcCNiWIEsXac4oaAm9AiF8B7BzV4w")
 }
