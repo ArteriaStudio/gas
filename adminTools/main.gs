@@ -1,4 +1,7 @@
 ﻿//　Written by Rink(アルテリア工房)
+//　＜使用上の留意事項＞
+//　　・リモートからのコマンドはキューされる。
+//　　・管理対象外のデバイスを後日にデバイス登録すると、登録時点で待機されたコマンドが実行される。
 
 //　定数宣言
 
@@ -18,6 +21,7 @@ function main()
   //　アカウントの組織単位を変更する。
   //moveOrgUnit("element@arteria-s.net", "/客員")
 
+  //　定期処理を実行
   loadEntities("1IY1-ZE8AtnxOF_CcCNiWIEsXac4oaAm9AiF8B7BzV4w")
 }
 
@@ -104,16 +108,25 @@ function loadEntities(fileId)
         continue;
       }
 
-      //　
-      var result = ProcessEntry(pUser, pSerialNumber, pCommand, pExpireDate)
-      if (result == false) {
-        //　処理対象外（スキップ）
-        continue;
+      //　処理関数を起動
+      var pDone = false;
+      var pError = "";
+      try {
+        var result = ProcessEntry(pUser, pSerialNumber, pCommand, pExpireDate)
+        if (result == false) {
+          //　処理対象外（スキップ）
+          continue;
+        }
+        pDone = true;
+      } catch (e) {
+        pDone = false;
+        pError = e.message;
       }
 
-      //　処理した事を記録
-      pSheet.getRange(iRow, 5).setValue("True");
+      //　処理結果を記録
+      pSheet.getRange(iRow, 5).setValue(pDone);
       pSheet.getRange(iRow, 6).setValue(new Date);
+      pSheet.getRange(iRow, 7).setValue(pError);
     }
   } catch (e) {
     console.log(e.message)
@@ -135,14 +148,28 @@ function ProcessEntry(pUser, pSerialNumber, pCommand, pExpireDate)
   }
 
   //　処理関数を起動
-  var status = false;
   switch (pCommand) {
   case  "SuspendAccount":
     //　アカウントを停止
-    status = switchAccountStatus(pUser, true)
+    switchAccountStatus(pUser, true)
     break;
   case  "SuspendDevice":
-    status = switchDeviceStatus(pSerialNumber, "reenable")
+    switchDeviceStatus(pSerialNumber, "disable");
+    break;
+  case  "RenableDevice":
+    switchDeviceStatus(pSerialNumber, "reenable");
+    break;
+  case  "DeprovisoningDevice":
+    deprovisionDevice(pSerialNumber);
+    break;
+  case  "RebootDevice":
+    issueDevice(pSerialNumber, "REBOOT");
+    break;
+  case  "WipeUsers":
+    issueDevice(pSerialNumber, "WIPE_USERS");
+    break;
+  case  "RemotePowerWash":
+    issueDevice(pSerialNumber, "REMOTE_POWERWASH");
     break;
   default:
     //　コマンドが定義にない。（処理対象外）
@@ -151,5 +178,5 @@ function ProcessEntry(pUser, pSerialNumber, pCommand, pExpireDate)
 
   console.log("Command: " + pCommand + ", Date: " + pExpireDate + ", User: " + pUser + ", SerialNumber: " + pSerialNumber)
 
-  return(status);
+  return(true);
 }
