@@ -83,3 +83,45 @@ function issueDevice(pSerialNumber, pCommandType)
     var pResult = AdminDirectory.Customer.Devices.Chromeos.issueCommand(pDevice, pCustomerId, pDeviceId);
   }
 }
+
+//　デバイスの所属組織単位を移動する。
+//　pDeviceId：
+//　pOrgUnitPath：移動先の組織単位
+function moveDeviceToOU(pSerialNumber, pOrgUnitPath)
+{
+  //　
+  var pCustomerId = "my_customer";  //　my_customerは、事前定義済みのエイリアス
+  var pQuery = "id:" + pSerialNumber;
+  var pResults = listChromeOS(pCustomerId, pQuery)
+  for (const pResource of pResults) {
+    var pResourceId = pResource.deviceId;
+
+    //　リクエスト本文を作成
+    var pChromeOsDeviceAction = {
+     deviceIds: pResourceId
+    }
+
+    //　デバイスにコマンドを投入
+    var pResult = AdminDirectory.Chromeosdevices.moveDevicesToOu(pChromeOsDeviceAction, pCustomerId, pOrgUnitPath);
+    console.log("moveDeviceToOU() ResourceId:" + pResourceId)
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}

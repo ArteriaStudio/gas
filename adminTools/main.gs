@@ -15,6 +15,12 @@ var g_skuId = ""
 //　定期処理
 function main()
 {
+  //　停止中のアカウントからライセンスを剥奪する。
+  //revokeLicenseFromSuspendedUsers(g_pDomainName, g_productId, g_skuId)
+
+  //　アカウントの組織単位を変更する。
+  //moveOrgUnit("element@arteria-s.net", "/客員")
+
   //　定期処理を実行
   loadEntities("1IY1-ZE8AtnxOF_CcCNiWIEsXac4oaAm9AiF8B7BzV4w")
 }
@@ -87,15 +93,16 @@ function loadEntities(fileId)
     var nRows = pSheet.getLastRow();
     for (var iRow = 2; iRow <= nRows; iRow ++) {
       //　セルから範囲を取得
-      var pRange = pSheet.getRange(iRow, 1, 1, 5)
+      var pRange = pSheet.getRange(iRow, 1, 1, 6)
       var pValues = pRange.getValues()
 
       //　エイリアスとする変数に複写
       var pUser = pValues[0][0]
       var pSerialNumber = pValues[0][1]
-      var pCommand = pValues[0][2]
-      var pExpireDate = pValues[0][3]
-      var pDone = pValues[0][4]
+      var pOrgUnit = pValues[0][2]
+      var pCommand = pValues[0][3]
+      var pExpireDate = pValues[0][4]
+      var pDone = pValues[0][5]
       
       //　処理済み行はスキップする。
       if (pDone != "") {
@@ -106,7 +113,7 @@ function loadEntities(fileId)
       var pDone = false;
       var pError = "";
       try {
-        var result = ProcessEntry(pUser, pSerialNumber, pCommand, pExpireDate)
+        var result = ProcessEntry(pUser, pSerialNumber, pOrgUnit, pCommand, pExpireDate)
         if (result == false) {
           //　処理対象外（スキップ）
           continue;
@@ -118,9 +125,9 @@ function loadEntities(fileId)
       }
 
       //　処理結果を記録
-      pSheet.getRange(iRow, 5).setValue(pDone);
-      pSheet.getRange(iRow, 6).setValue(new Date);
-      pSheet.getRange(iRow, 7).setValue(pError);
+      pSheet.getRange(iRow, 6).setValue(pDone);
+      pSheet.getRange(iRow, 7).setValue(new Date);
+      pSheet.getRange(iRow, 8).setValue(pError);
     }
   } catch (e) {
     console.log(e.message)
@@ -128,11 +135,15 @@ function loadEntities(fileId)
 }
 
 //　エントリ処理関数
-function ProcessEntry(pUser, pSerialNumber, pCommand, pExpireDate)
+function ProcessEntry(pUser, pSerialNumber, pOrgUnit, pCommand, pExpireDate)
 {
   //　入力データ検査
   if (isMailAddress(pUser) == false) {
     //　ユーザー名がメールアドレスの形式でなければ、処理対象外とする。
+    return(false);
+  }
+  if ((pExpireDate == null) || (pExpireDate == "")) {
+    //　期限が指定されていない。処理対象外とする。
     return(false);
   }
   var pNow = new Date
@@ -164,6 +175,9 @@ function ProcessEntry(pUser, pSerialNumber, pCommand, pExpireDate)
     break;
   case  "RemotePowerWash":
     issueDevice(pSerialNumber, "REMOTE_POWERWASH");
+    break;
+  case  "MoveDeviceToOU":
+    moveDeviceToOU(pSerialNumber, pOrgUnit)
     break;
   default:
     //　コマンドが定義にない。（処理対象外）
